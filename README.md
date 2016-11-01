@@ -1,5 +1,3 @@
-test edit
-
 <div align="center"><img src="deps/ijulialogo.png" alt="IJulia logo" width="150"/></div>
 
 [![Build Status](https://api.travis-ci.org/JuliaLang/IJulia.jl.svg)](https://travis-ci.org/JuliaLang/IJulia.jl)
