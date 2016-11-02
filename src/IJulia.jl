@@ -134,7 +134,7 @@ import Compat.String
 # Debugging IJulia
 
 # in the Jupyter front-end, enable verbose output via IJulia.set_verbose()
-verbose = true
+verbose = false
 """
     set_verbose(v=true)
 

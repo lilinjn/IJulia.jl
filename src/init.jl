@@ -58,10 +58,10 @@ function init(args)
         signature_scheme = get(profile, "signature_scheme", "hmac-sha256")
         isempty(signature_scheme) && (signature_scheme = "hmac-sha256")
         signature_scheme = split(signature_scheme, "-")
-        if signature_scheme[1] != "hmac" || signature_scheme) != "sha256"
+        if signature_scheme[1] != "hmac" || signature_scheme[2] != "sha256"
             error("unrecognized signature_scheme $signature_scheme")
         end
-        hmacstate = HMACState(profile["key"])
+        push!(hmacstate,HMAC.HMACState(profile["key"]))
     end
 
     ctx[] = Context()
