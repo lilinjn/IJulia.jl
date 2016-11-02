@@ -1,3 +1,5 @@
+using LilBootstrap
+
 import IJulia
 
 # workaround #60:

@@ -32,8 +32,100 @@ The `IJulia` module is used in three ways:
 * It is used internally by the IJulia kernel when talking
   to the Jupyter server.
 """
+
+
+
 module IJulia
 export notebook
+
+
+##################################################################
+###  Setup
+
+#######################################################################
+import JSON, Conda
+using Compat
+import Compat.String
+import PackagePrelude
+
+import LilConda: ensure_conda
+using PackagePrelude: ensure_fork, ⇶
+
+ensure_conda("jupyter", v"1.0.0")
+
+#forks
+[  (:ZMQ,       "master")] ⇶ ensure_fork
+
+# remove deps.jl at exit if it exists, in case build.jl fails
+#######################################################################
+
+# print to stderr, since that is where Pkg prints its messages
+eprintln(x...) = println(STDERR, x...)
+const jupyter = abspath(Conda.SCRIPTDIR,"jupyter")
+function prog_version(prog)
+    try
+       return convert(VersionNumber, chomp(readstring(`$prog --version`)))
+    catch
+       return v"0.0"
+    end
+end
+jupyter_vers = prog_version(jupyter)
+if jupyter_vers < v"3.0"
+    error("Failed to find or install Jupyter 3.0 or later. Please install manually and rerun `Pkg.build(\"IJulia\")`.")
+end
+info("Found Jupyter version $jupyter_vers: $jupyter")
+
+
+#######################################################################
+# Install Jupyter kernel-spec file.
+
+# Is IJulia being built from a debug build? If so, add "debug" to the description.
+debugdesc = ccall(:jl_is_debugbuild,Cint,())==1 ? "-debug" : ""
+
+spec_name = "liljulia-$(VERSION.major).$(VERSION.minor)"*debugdesc
+juliakspec = abspath(joinpath(PackagePrelude.ephemera,"kernelspec",spec_name))
+
+binary_name = is_windows() ? "julia.exe" : "julia"
+kernelcmd_array = String[joinpath(JULIA_HOME,("$binary_name")), "-i"]
+ijulia_dir = joinpath(PackagePrelude.ephemera,"repos","IJulia") # support non-Pkg IJulia installs
+append!(kernelcmd_array, ["--startup-file=yes", "--color=yes", joinpath(ijulia_dir,"src","kernel.jl"), "{connection_file}"])
+
+ks = Dict(
+    "argv" => kernelcmd_array,
+    "display_name" => "lilJulia " * Base.VERSION_STRING * debugdesc,
+    "language" => "julia",
+)
+
+destname = "kernel.json"
+mkpath(juliakspec)
+dest = joinpath(juliakspec, destname)
+
+eprintln("Writing IJulia kernelspec to $dest ...")
+
+open(dest, "w") do f
+    # indent by 2 for readability of file
+    write(f, JSON.json(ks, 2))
+end
+
+copy_config(src, dest) = cp(joinpath(dirname(@__FILE__),src), joinpath(dest, src), remove_destination=true)
+
+copy_config("logo-32x32.png", juliakspec)
+copy_config("logo-64x64.png", juliakspec)
+
+eprintln("Installing julia kernelspec $spec_name")
+
+# remove these hacks when
+# https://github.com/jupyter/notebook/issues/448 is closed and the fix
+# is widely available -- just run `$jupyter kernelspec ...` then.
+run(`$jupyter kernelspec install --replace --user $juliakspec`)
+#push!(notebook, jupyter, "notebook")
+const notebook_cmd =  "$(jupyter) notebook"
+println("Notebook cmd: $notebook_cmd")
+
+
+##################################################################
+
+
 
 using ZMQ, JSON, Compat
 import Compat.String
@@ -42,7 +134,7 @@ import Compat.String
 # Debugging IJulia
 
 # in the Jupyter front-end, enable verbose output via IJulia.set_verbose()
-verbose = false
+verbose = true
 """
     set_verbose(v=true)
 
