@@ -51,11 +51,13 @@ import PackagePrelude
 import LilConda: ensure_conda
 using PackagePrelude: ensure_fork, ⇶
 
-ensure_conda("jupyter", v"1.0.0")
-
 #forks
 [  (:ZMQ,       "master") ] ⇶ ensure_fork
 using ZMQ
+
+
+ensure_conda("jupyter", v"1.0.0")
+
 
 # remove deps.jl at exit if it exists, in case build.jl fails
 #######################################################################
