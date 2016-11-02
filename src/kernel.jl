@@ -1,6 +1,6 @@
 using LilBootstrap
 
-import IJulia
+using IJulia
 
 # workaround #60:
 if IJulia.Compat.is_apple()

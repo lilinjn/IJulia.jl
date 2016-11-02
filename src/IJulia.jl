@@ -54,7 +54,8 @@ using PackagePrelude: ensure_fork, ⇶
 ensure_conda("jupyter", v"1.0.0")
 
 #forks
-[  (:ZMQ,       "master")] ⇶ ensure_fork
+[  (:ZMQ,       "master") ] ⇶ ensure_fork
+using ZMQ
 
 # remove deps.jl at exit if it exists, in case build.jl fails
 #######################################################################
@@ -86,7 +87,7 @@ spec_name = "liljulia-$(VERSION.major).$(VERSION.minor)"*debugdesc
 juliakspec = abspath(joinpath(PackagePrelude.ephemera,"kernelspec",spec_name))
 
 binary_name = is_windows() ? "julia.exe" : "julia"
-kernelcmd_array = String[joinpath(JULIA_HOME,("$binary_name")), "-i"]
+kernelcmd_array = String[joinpath(homedir(),"bin",("$binary_name")), "-i"]
 ijulia_dir = joinpath(PackagePrelude.ephemera,"repos","IJulia") # support non-Pkg IJulia installs
 append!(kernelcmd_array, ["--startup-file=yes", "--color=yes", joinpath(ijulia_dir,"src","kernel.jl"), "{connection_file}"])
 
